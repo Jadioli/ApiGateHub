@@ -306,7 +306,7 @@ export default function ModelConfigs() {
                           placeholder={t('modelConfig.mappedHint')}
                           addonBefore={t('modelConfig.mappedName')}
                         />
-                        <InputNumber min={0} value={selection.priority} onChange={(value) => updatePriority(model.id, value)} />
+                        <InputNumber min={0} value={selection.priority} onChange={(value) => updatePriority(model.id, value)} addonBefore="优先级" />
                       </Space>
                     )}
                   </div>
@@ -392,7 +392,7 @@ export default function ModelConfigs() {
       />
 
       <Card className="premium-card">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
           <Button
             type="primary"
             size="large"

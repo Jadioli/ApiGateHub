@@ -166,7 +166,7 @@ export default function APIKeys() {
       )}
 
       <Card className="premium-card">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
           <Button
             type="primary"
             size="large"

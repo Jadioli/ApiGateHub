@@ -106,6 +106,17 @@ export default function Providers() {
     setModels(data);
   };
 
+  const handleBulkToggle = async (enable) => {
+    for (const model of models) {
+      if (model.enabled !== enable) {
+        await api.put(`/providers/${drawerProvider.id}/models/${model.id}/toggle`);
+      }
+    }
+    const { data } = await api.get(`/providers/${drawerProvider.id}/models`);
+    setModels(data);
+    message.success(t('common.success'));
+  };
+
   const columns = [
     { title: t('provider.name'), dataIndex: 'name', key: 'name', width: '20%' },
     { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag>, width: '15%' },
@@ -137,11 +148,11 @@ export default function Providers() {
 
       <Card className="premium-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Button icon={<SyncOutlined />} onClick={handleSyncAll} loading={syncAllLoading} size="large" style={{ borderRadius: 8 }}>
-            {t('provider.syncAll')}
-          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} size="large" style={{ borderRadius: 8 }}>
             {t('provider.add')}
+          </Button>
+          <Button icon={<SyncOutlined />} onClick={handleSyncAll} loading={syncAllLoading} size="large" style={{ borderRadius: 8 }}>
+            {t('provider.syncAll')}
           </Button>
         </div>
         <Table
@@ -168,6 +179,12 @@ export default function Providers() {
       </Modal>
 
       <Drawer title={`${t('provider.models')} - ${drawerProvider?.name || ''}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={480}>
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button type="primary" onClick={() => handleBulkToggle(true)}>全启用</Button>
+            <Button onClick={() => handleBulkToggle(false)}>全不启用</Button>
+          </Space>
+        </div>
         <Table dataSource={models} rowKey="id" size="middle" pagination={false}
           columns={[
             { title: t('provider.model.name'), dataIndex: 'model_name', key: 'model_name' },
