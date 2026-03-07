@@ -25,6 +25,7 @@ const translations = {
     'provider.apikey.keep': 'API Key（留空保持不变）',
     'provider.status': '状态',
     'provider.sync': '同步',
+    'provider.syncAll': '全部同步',
     'provider.sync.status': '同步状态',
     'provider.models': '模型',
     'provider.edit': '编辑服务商',
@@ -130,6 +131,7 @@ const translations = {
     'provider.apikey.keep': 'API Key (leave empty to keep)',
     'provider.status': 'Status',
     'provider.sync': 'Sync',
+    'provider.syncAll': 'Sync All',
     'provider.sync.status': 'Sync Status',
     'provider.models': 'Models',
     'provider.edit': 'Edit Provider',
@@ -243,5 +245,4 @@ export function I18nProvider({ children }) {
 export function useI18n() {
   return useContext(I18nContext);
 }
-
 

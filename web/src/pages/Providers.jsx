@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Switch, Space, Tag, Drawer, message, Popconfirm, Card, Typography } from 'antd';
 import { PlusOutlined, SyncOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n';
@@ -14,10 +14,11 @@ export default function Providers() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [models, setModels] = useState([]);
   const [drawerProvider, setDrawerProvider] = useState(null);
+  const [syncAllLoading, setSyncAllLoading] = useState(false);
   const [form] = Form.useForm();
   const { t } = useI18n();
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     api.get('/providers')
       .then((r) => setProviders(r.data))
@@ -26,12 +27,24 @@ export default function Providers() {
         message.error(error.response?.data?.error || t('common.failed'));
       })
       .finally(() => setLoading(false));
-  };
+  }, [t]);
 
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [load]);
+
+  useEffect(() => {
+    if (!providers.some((provider) => provider.sync_status === 'syncing')) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      load();
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [providers, load]);
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = (r) => { setEditing(r); form.setFieldsValue({ name: r.name, protocol: r.protocol, base_url: r.base_url, api_key: '' }); setModalOpen(true); };
@@ -64,6 +77,20 @@ export default function Providers() {
       message.error({ content: t('common.failed'), key: 'sync' });
     }
     load();
+  };
+
+  const handleSyncAll = async () => {
+    setSyncAllLoading(true);
+    message.loading({ content: t('provider.syncAll') + '...', key: 'sync-all' });
+    try {
+      await api.post('/providers/sync-all');
+      message.success({ content: t('common.success'), key: 'sync-all' });
+    } catch (error) {
+      message.error({ content: error.response?.data?.error || t('common.failed'), key: 'sync-all' });
+    } finally {
+      setSyncAllLoading(false);
+      load();
+    }
   };
 
   const openModels = async (r) => {
@@ -109,7 +136,10 @@ export default function Providers() {
       </div>
 
       <Card className="premium-card">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          <Button icon={<SyncOutlined />} onClick={handleSyncAll} loading={syncAllLoading} size="large" style={{ borderRadius: 8 }}>
+            {t('provider.syncAll')}
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} size="large" style={{ borderRadius: 8 }}>
             {t('provider.add')}
           </Button>
@@ -148,4 +178,3 @@ export default function Providers() {
     </div>
   );
 }
-

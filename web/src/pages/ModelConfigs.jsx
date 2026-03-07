@@ -49,6 +49,19 @@ function buildSelectedState(items = []) {
   return next;
 }
 
+function filterSelectedByAvailable(selectedState = {}, groups = []) {
+  const allowedModelIDs = new Set();
+  groups.forEach((group) => {
+    (group.models || []).forEach((model) => {
+      allowedModelIDs.add(model.id);
+    });
+  });
+
+  return Object.fromEntries(
+    Object.entries(selectedState).filter(([providerModelId]) => allowedModelIDs.has(Number(providerModelId))),
+  );
+}
+
 export default function ModelConfigs() {
   const { t } = useI18n();
   const [configs, setConfigs] = useState([]);
@@ -97,9 +110,11 @@ export default function ModelConfigs() {
       ]);
 
       const config = configRes.data;
+      const groups = modelsRes.data || [];
+      const selectedState = buildSelectedState(config.items || []);
       setEditingConfig(config);
-      setAvailableModels(modelsRes.data || []);
-      setSelected(buildSelectedState(config.items || []));
+      setAvailableModels(groups);
+      setSelected(filterSelectedByAvailable(selectedState, groups));
       editorForm.setFieldsValue({
         name: config.name,
         description: config.description,
@@ -488,5 +503,4 @@ export default function ModelConfigs() {
     </div>
   );
 }
-
 

@@ -77,8 +77,12 @@ function fromVirtualPath(virtualPath) {
     return virtualPath;
   }
 
-  const relativePath = virtualPath.slice(virtualRoot.length + 1);
-  const driveMatch = relativePath.match(/^([a-z])\/(.*)$/);
+  // Keep leading slash for POSIX paths.
+  // Example: /@fs/home/user/project -> /home/user/project
+  const relativePath = virtualPath.slice(virtualRoot.length);
+
+  // Windows drive form: /@fs/c/Users/... -> C:\Users\...
+  const driveMatch = relativePath.match(/^\/([a-z])\/(.*)$/);
   if (driveMatch) {
     return `${driveMatch[1].toUpperCase()}:\\${driveMatch[2].replace(/\//g, '\\')}`;
   }

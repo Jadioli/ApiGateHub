@@ -34,11 +34,13 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 	}
 
 	provider := &models.Provider{
-		Name:     req.Name,
-		Protocol: models.ProviderProtocol(req.Protocol),
-		BaseURL:  req.BaseURL,
-		APIKey:   req.APIKey,
-		Enabled:  true,
+		Name:       req.Name,
+		Protocol:   models.ProviderProtocol(req.Protocol),
+		BaseURL:    req.BaseURL,
+		APIKey:     req.APIKey,
+		Enabled:    true,
+		SyncStatus: "syncing",
+		SyncError:  "",
 	}
 
 	if err := h.providerService.Create(provider); err != nil {
@@ -155,6 +157,14 @@ func (h *ProviderHandler) Sync(c *gin.Context) {
 	}
 
 	if err := h.syncService.SyncProvider(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "sync completed"})
+}
+
+func (h *ProviderHandler) SyncAll(c *gin.Context) {
+	if err := h.syncService.SyncAllProviders(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

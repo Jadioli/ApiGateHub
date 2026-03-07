@@ -76,6 +76,7 @@ func main() {
 			// Provider management
 			authed.GET("/providers", providerHandler.List)
 			authed.POST("/providers", providerHandler.Create)
+			authed.POST("/providers/sync-all", providerHandler.SyncAll)
 			authed.GET("/providers/:id", providerHandler.Get)
 			authed.PUT("/providers/:id", providerHandler.Update)
 			authed.DELETE("/providers/:id", providerHandler.Delete)

@@ -133,13 +133,21 @@ func (s *ModelConfigService) GetAllAvailableModels() ([]ProviderWithModels, erro
 
 	result := make([]ProviderWithModels, 0, len(providers))
 	for _, provider := range providers {
-		models, err := s.providerRepo.FindModelsByProviderID(provider.ID)
+		providerModels, err := s.providerRepo.FindModelsByProviderID(provider.ID)
 		if err != nil {
 			continue
 		}
+
+		enabledModels := make([]models.ProviderModel, 0, len(providerModels))
+		for _, model := range providerModels {
+			if model.Enabled {
+				enabledModels = append(enabledModels, model)
+			}
+		}
+
 		result = append(result, ProviderWithModels{
 			Provider: provider,
-			Models:   models,
+			Models:   enabledModels,
 		})
 	}
 
