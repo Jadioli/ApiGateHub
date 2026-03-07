@@ -1,7 +1,7 @@
 # Binaries
 *.exe
-server
-apihub
+/server
+/apihub
 
 # Build caches
 .gocache/
