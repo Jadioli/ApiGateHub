@@ -10,6 +10,7 @@ import ModelConfigs from './pages/ModelConfigs';
 import APIKeys from './pages/APIKeys';
 import APIKeyDetail from './pages/APIKeyDetail';
 import Logs from './pages/Logs';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
   return (
@@ -49,11 +50,11 @@ export default function App() {
               )}
             >
               <Route path="/" element={<Dashboard />} />
-              <Route path="/providers" element={<Providers />} />
-              <Route path="/model-configs" element={<ModelConfigs />} />
-              <Route path="/apikeys" element={<APIKeys />} />
-              <Route path="/apikeys/:id" element={<APIKeyDetail />} />
-              <Route path="/logs" element={<Logs />} />
+              <Route path="/providers" element={<ErrorBoundary><Providers /></ErrorBoundary>} />
+              <Route path="/model-configs" element={<ErrorBoundary><ModelConfigs /></ErrorBoundary>} />
+              <Route path="/apikeys" element={<ErrorBoundary><APIKeys /></ErrorBoundary>} />
+              <Route path="/apikeys/:id" element={<ErrorBoundary><APIKeyDetail /></ErrorBoundary>} />
+              <Route path="/logs" element={<ErrorBoundary><Logs /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
