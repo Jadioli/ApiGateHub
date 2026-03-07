@@ -1,0 +1,26 @@
+# Binaries
+*.exe
+server
+apihub
+
+# Build caches
+.gocache/
+.npm-cache/
+
+# Database
+data/
+*.db
+
+# Dependencies
+node_modules/
+
+# Build output
+web/dist/
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp

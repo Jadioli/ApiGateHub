@@ -1,0 +1,19 @@
+services:
+  apihub:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "9011:9011"
+    volumes:
+      - apihub-data:/app/data
+    environment:
+      - SERVER_PORT=9011
+      - DATABASE_PATH=/app/data/apihub.db
+      - ADMIN_PASSWORD=admin123
+      - SYNC_INTERVAL=60
+      - LOG_LEVEL=info
+    restart: unless-stopped
+
+volumes:
+  apihub-data:

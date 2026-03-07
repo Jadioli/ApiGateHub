@@ -1,0 +1,13 @@
+.git
+.claude
+.dockerconfig
+.gocache
+.npm-cache
+node_modules
+web/node_modules
+web/dist
+data/
+*.exe
+apihub
+*.db
+.env
