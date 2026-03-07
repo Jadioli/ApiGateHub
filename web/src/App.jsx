@@ -14,7 +14,30 @@ import Logs from './pages/Logs';
 export default function App() {
   return (
     <I18nProvider>
-      <ConfigProvider theme={{ token: { colorPrimary: '#1677ff' } }}>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: '#6366f1',
+            borderRadius: 8,
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            colorBgContainer: '#ffffff',
+            wireframe: false,
+          },
+          components: {
+            Card: {
+              borderRadiusLG: 16,
+              boxShadowTertiary: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+            },
+            Table: {
+              borderRadiusLG: 12,
+              headerBg: '#f8fafc',
+            },
+            Layout: {
+              headerBg: 'rgba(255, 255, 255, 0.8)',
+            }
+          }
+        }}
+      >
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />

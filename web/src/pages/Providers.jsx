@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Switch, Space, Tag, Drawer, message, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Switch, Space, Tag, Drawer, message, Popconfirm, Card, Typography } from 'antd';
 import { PlusOutlined, SyncOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n';
 import api from '../api';
+
+const { Title } = Typography;
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
@@ -78,16 +80,16 @@ export default function Providers() {
   };
 
   const columns = [
-    { title: t('provider.name'), dataIndex: 'name', key: 'name' },
-    { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag> },
-    { title: t('provider.baseurl'), dataIndex: 'base_url', key: 'base_url', ellipsis: true },
-    { title: t('common.enabled'), key: 'enabled', render: (_, r) => <Switch size="small" checked={r.enabled} onChange={() => api.put(`/providers/${r.id}/toggle`).then(load)} /> },
-    { title: t('provider.sync.status'), dataIndex: 'sync_status', key: 'sync', render: (v) => <Tag color={v === 'success' ? 'green' : v === 'failed' ? 'red' : 'default'}>{v || t('common.pending')}</Tag> },
+    { title: t('provider.name'), dataIndex: 'name', key: 'name', width: '20%' },
+    { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag>, width: '15%' },
+    { title: t('provider.baseurl'), dataIndex: 'base_url', key: 'base_url', ellipsis: true, width: '25%' },
+    { title: t('common.enabled'), key: 'enabled', render: (_, r) => <Switch size="small" checked={r.enabled} onChange={() => api.put(`/providers/${r.id}/toggle`).then(load)} />, width: '10%' },
+    { title: t('provider.sync.status'), dataIndex: 'sync_status', key: 'sync', render: (v) => <Tag color={v === 'success' ? 'green' : v === 'failed' ? 'red' : 'default'}>{v || t('common.pending')}</Tag>, width: '10%' },
     {
       title: t('common.actions'), key: 'actions',
       render: (_, r) => (
         <Space size="small">
-          <Button size="small" icon={<UnorderedListOutlined />} onClick={() => openModels(r)}>{t('provider.models')}</Button>
+          <Button size="small" type="primary" ghost icon={<UnorderedListOutlined />} onClick={() => openModels(r)}>{t('provider.models')}</Button>
           <Button size="small" icon={<SyncOutlined />} onClick={() => handleSync(r.id)}>{t('provider.sync')}</Button>
           <Button size="small" onClick={() => openEdit(r)}>{t('common.edit')}</Button>
           <Popconfirm title={t('common.confirm_delete')} onConfirm={() => api.delete(`/providers/${r.id}`).then(() => { message.success(t('common.deleted')); load(); })}>
@@ -99,30 +101,51 @@ export default function Providers() {
   ];
 
   return (
-    <>
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('provider.add')}</Button>
+    <div className="dashboard-container">
+      <div className="dashboard-header mb-6">
+        <Title level={2} style={{ marginTop: 0, marginBottom: '24px', fontWeight: 700, color: '#1e293b' }}>
+          {t('menu.providers')}
+        </Title>
       </div>
-      <Table dataSource={providers} columns={columns} rowKey="id" loading={loading} size="middle" />
 
-      <Modal title={editing ? t('provider.edit') : t('provider.add')} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} destroyOnClose>
+      <Card className="premium-card">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} size="large" style={{ borderRadius: 8 }}>
+            {t('provider.add')}
+          </Button>
+        </div>
+        <Table
+          dataSource={providers}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          size="middle"
+          pagination={{
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `Total ${total} items`,
+          }}
+        />
+      </Card>
+
+      <Modal title={editing ? t('provider.edit') : t('provider.add')} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} destroyOnClose centered>
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label={t('provider.name')} rules={[{ required: true }]}><Input /></Form.Item>
-          {!editing && <Form.Item name="protocol" label={t('provider.protocol')} rules={[{ required: true }]}><Select options={[{ value: 'openai', label: 'OpenAI' }, { value: 'anthropic', label: 'Anthropic' }]} /></Form.Item>}
-          <Form.Item name="base_url" label={t('provider.baseurl')} rules={[{ required: !editing }]}><Input placeholder="https://api.openai.com" /></Form.Item>
-          <Form.Item name="api_key" label={editing ? t('provider.apikey.keep') : t('provider.apikey')} rules={[{ required: !editing }]}><Input.Password /></Form.Item>
+          <Form.Item name="name" label={t('provider.name')} rules={[{ required: true }]}><Input size="large" /></Form.Item>
+          {!editing && <Form.Item name="protocol" label={t('provider.protocol')} rules={[{ required: true }]}><Select size="large" options={[{ value: 'openai', label: 'OpenAI' }, { value: 'anthropic', label: 'Anthropic' }]} /></Form.Item>}
+          <Form.Item name="base_url" label={t('provider.baseurl')} rules={[{ required: !editing }]}><Input size="large" placeholder="https://api.openai.com" /></Form.Item>
+          <Form.Item name="api_key" label={editing ? t('provider.apikey.keep') : t('provider.apikey')} rules={[{ required: !editing }]}><Input.Password size="large" /></Form.Item>
         </Form>
       </Modal>
 
       <Drawer title={`${t('provider.models')} - ${drawerProvider?.name || ''}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={480}>
-        <Table dataSource={models} rowKey="id" size="small" pagination={false}
+        <Table dataSource={models} rowKey="id" size="middle" pagination={false}
           columns={[
             { title: t('provider.model.name'), dataIndex: 'model_name', key: 'model_name' },
             { title: t('provider.model.enabled'), key: 'enabled', render: (_, r) => <Switch size="small" checked={r.enabled} onChange={() => toggleModel(r.id)} /> },
           ]}
         />
       </Drawer>
-    </>
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag, Typography, message } from 'antd';
+import { Alert, Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, Tag, Typography, Card, message } from 'antd';
 import { PlusOutlined, SettingOutlined, CopyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
@@ -148,24 +148,49 @@ export default function APIKeys() {
   ];
 
   return (
-    <>
+    <div className="dashboard-container">
+      <div className="dashboard-header mb-6">
+        <Typography.Title level={2} style={{ marginTop: 0, marginBottom: '24px', fontWeight: 700, color: '#1e293b' }}>
+          {t('menu.apikeys')}
+        </Typography.Title>
+      </div>
+
       {!enabledConfigs.length && (
         <Alert
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 24, borderRadius: 8, border: 'none', background: '#fffbeb' }}
           type="warning"
           showIcon
-          message={t('apikey.config.required')}
-          action={<Button size="small" onClick={() => navigate('/model-configs')}>{t('apikey.config.openConfigs')}</Button>}
+          message={<Text strong style={{ color: '#d97706' }}>{t('apikey.config.required')}</Text>}
+          action={<Button size="small" type="primary" onClick={() => navigate('/model-configs')}>{t('apikey.config.openConfigs')}</Button>}
         />
       )}
 
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} disabled={!enabledConfigs.length}>
-          {t('apikey.add')}
-        </Button>
-      </div>
+      <Card className="premium-card">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <Button
+            type="primary"
+            size="large"
+            style={{ borderRadius: 8 }}
+            icon={<PlusOutlined />}
+            onClick={openCreate}
+            disabled={!enabledConfigs.length}
+          >
+            {t('apikey.add')}
+          </Button>
+        </div>
 
-      <Table dataSource={keys} columns={columns} rowKey="id" loading={loading} size="middle" />
+        <Table
+          dataSource={keys}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          size="middle"
+          pagination={{
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} keys`,
+          }}
+        />
+      </Card>
 
       <Modal
         title={t('apikey.add')}
@@ -189,7 +214,7 @@ export default function APIKeys() {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 }
 

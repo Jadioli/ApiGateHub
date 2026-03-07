@@ -14,10 +14,8 @@ import {
   Popconfirm,
   Space,
   Spin,
-  Switch,
-  Table,
-  Tag,
   Typography,
+  Card,
   message,
 } from 'antd';
 import {
@@ -361,35 +359,49 @@ export default function ModelConfigs() {
   ];
 
   return (
-    <>
-      <Alert
-        style={{ marginBottom: 16 }}
-        type="info"
-        showIcon
-        message={t('modelConfig.summary', { providers: providerCount, models: totalModels })}
-      />
-
-      <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            createForm.resetFields();
-            setCreateOpen(true);
-          }}
-        >
-          {t('modelConfig.add')}
-        </Button>
+    <div className="dashboard-container">
+      <div className="dashboard-header mb-6">
+        <Typography.Title level={2} style={{ marginTop: 0, marginBottom: '24px', fontWeight: 700, color: '#1e293b' }}>
+          {t('menu.modelConfigs')}
+        </Typography.Title>
       </div>
 
-      <Table
-        dataSource={configs}
-        columns={columns}
-        rowKey="id"
-        loading={loading}
-        size="middle"
-        locale={{ emptyText: <Empty description={t('modelConfig.empty')} /> }}
+      <Alert
+        style={{ marginBottom: 24, borderRadius: 8, border: 'none', background: '#eef2ff' }}
+        type="info"
+        showIcon
+        message={<Text strong style={{ color: '#4f46e5' }}>{t('modelConfig.summary', { providers: providerCount, models: totalModels })}</Text>}
       />
+
+      <Card className="premium-card">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <Button
+            type="primary"
+            size="large"
+            style={{ borderRadius: 8 }}
+            icon={<PlusOutlined />}
+            onClick={() => {
+              createForm.resetFields();
+              setCreateOpen(true);
+            }}
+          >
+            {t('modelConfig.add')}
+          </Button>
+        </div>
+
+        <Table
+          dataSource={configs}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          size="middle"
+          pagination={{
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} configs`,
+          }}
+          locale={{ emptyText: <Empty description={t('modelConfig.empty')} /> }}
+        />
+      </Card>
 
       <Modal
         title={t('modelConfig.add')}
@@ -470,7 +482,7 @@ export default function ModelConfigs() {
           </Space>
         )}
       </Drawer>
-    </>
+    </div>
   );
 }
 
