@@ -1,10 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Switch, Space, Tag, Drawer, message, Popconfirm, Card, Typography } from 'antd';
-import { PlusOutlined, SyncOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { FilterOutlined, PlusOutlined, SyncOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useI18n } from '../i18n';
 import api from '../api';
 
 const { Title } = Typography;
+
+// Pre-defined tag colors for visual variety
+const TAG_COLORS = ['blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'gold', 'lime', 'geekblue', 'volcano'];
+function tagColor(tag) {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
@@ -15,8 +23,14 @@ export default function Providers() {
   const [models, setModels] = useState([]);
   const [drawerProvider, setDrawerProvider] = useState(null);
   const [syncAllLoading, setSyncAllLoading] = useState(false);
+  const [existingTags, setExistingTags] = useState([]);
+  const [filterTags, setFilterTags] = useState([]);
   const [form] = Form.useForm();
   const { t } = useI18n();
+
+  const loadTags = useCallback(() => {
+    api.get('/providers/tags').then((r) => setExistingTags(r.data || [])).catch(() => { });
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -27,7 +41,8 @@ export default function Providers() {
         message.error(error.response?.data?.error || t('common.failed'));
       })
       .finally(() => setLoading(false));
-  }, [t]);
+    loadTags();
+  }, [t, loadTags]);
 
   useEffect(() => {
     const timer = setTimeout(() => { load(); }, 0);
@@ -47,17 +62,27 @@ export default function Providers() {
   }, [providers, load]);
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
-  const openEdit = (r) => { setEditing(r); form.setFieldsValue({ name: r.name, protocol: r.protocol, base_url: r.base_url, api_key: '' }); setModalOpen(true); };
+  const openEdit = (r) => {
+    setEditing(r);
+    form.setFieldsValue({
+      name: r.name,
+      protocol: r.protocol,
+      base_url: r.base_url,
+      api_key: '',
+      tags: r.tags ? r.tags.split(',').map((s) => s.trim()).filter(Boolean) : [],
+    });
+    setModalOpen(true);
+  };
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
     try {
       if (editing) {
-        const payload = { name: values.name, base_url: values.base_url };
+        const payload = { name: values.name, base_url: values.base_url, tags: values.tags || [] };
         if (values.api_key) payload.api_key = values.api_key;
         await api.put(`/providers/${editing.id}`, payload);
       } else {
-        await api.post('/providers', values);
+        await api.post('/providers', { ...values, tags: values.tags || [] });
       }
       message.success(t('common.success'));
       setModalOpen(false);
@@ -117,11 +142,27 @@ export default function Providers() {
     message.success(t('common.success'));
   };
 
+  // Filtered providers based on selected tags
+  const filteredProviders = useMemo(() => {
+    if (!filterTags.length) return providers;
+    return providers.filter((p) => {
+      if (!p.tags) return false;
+      const providerTags = p.tags.split(',').map((s) => s.trim());
+      return filterTags.some((ft) => providerTags.includes(ft));
+    });
+  }, [providers, filterTags]);
+
   const columns = [
-    { title: t('provider.name'), dataIndex: 'name', key: 'name', width: '20%' },
-    { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag>, width: '15%' },
-    { title: t('provider.baseurl'), dataIndex: 'base_url', key: 'base_url', ellipsis: true, width: '25%' },
-    { title: t('common.enabled'), key: 'enabled', render: (_, r) => <Switch size="small" checked={r.enabled} onChange={() => api.put(`/providers/${r.id}/toggle`).then(load)} />, width: '10%' },
+    { title: t('provider.name'), dataIndex: 'name', key: 'name', width: '15%' },
+    { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag>, width: '10%' },
+    {
+      title: t('provider.tags'), dataIndex: 'tags', key: 'tags', width: '15%',
+      render: (v) => v ? v.split(',').map((s) => s.trim()).filter(Boolean).map((tag) => (
+        <Tag key={tag} color={tagColor(tag)} style={{ marginBottom: 4 }}>{tag}</Tag>
+      )) : <Typography.Text type="secondary">-</Typography.Text>,
+    },
+    { title: t('provider.baseurl'), dataIndex: 'base_url', key: 'base_url', ellipsis: true, width: '20%' },
+    { title: t('common.enabled'), key: 'enabled', render: (_, r) => <Switch size="small" checked={r.enabled} onChange={() => api.put(`/providers/${r.id}/toggle`).then(load)} />, width: '8%' },
     { title: t('provider.sync.status'), dataIndex: 'sync_status', key: 'sync', render: (v) => <Tag color={v === 'success' ? 'green' : v === 'failed' ? 'red' : 'default'}>{v || t('common.pending')}</Tag>, width: '10%' },
     {
       title: t('common.actions'), key: 'actions',
@@ -147,16 +188,28 @@ export default function Providers() {
       </div>
 
       <Card className="premium-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} size="large" style={{ borderRadius: 8 }}>
-            {t('provider.add')}
-          </Button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+          <Space wrap>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreate} size="large" style={{ borderRadius: 8 }}>
+              {t('provider.add')}
+            </Button>
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder={<span><FilterOutlined /> {t('provider.tags.filter')}</span>}
+              value={filterTags}
+              onChange={setFilterTags}
+              style={{ minWidth: 220 }}
+              options={existingTags.map((tag) => ({ value: tag, label: tag }))}
+              size="large"
+            />
+          </Space>
           <Button icon={<SyncOutlined />} onClick={handleSyncAll} loading={syncAllLoading} size="large" style={{ borderRadius: 8 }}>
             {t('provider.syncAll')}
           </Button>
         </div>
         <Table
-          dataSource={providers}
+          dataSource={filteredProviders}
           columns={columns}
           rowKey="id"
           loading={loading}
@@ -175,6 +228,14 @@ export default function Providers() {
           {!editing && <Form.Item name="protocol" label={t('provider.protocol')} rules={[{ required: true }]}><Select size="large" options={[{ value: 'openai', label: 'OpenAI' }, { value: 'anthropic', label: 'Anthropic' }]} /></Form.Item>}
           <Form.Item name="base_url" label={t('provider.baseurl')} rules={[{ required: !editing }]}><Input size="large" placeholder="https://api.openai.com" /></Form.Item>
           <Form.Item name="api_key" label={editing ? t('provider.apikey.keep') : t('provider.apikey')} rules={[{ required: !editing }]}><Input.Password size="large" /></Form.Item>
+          <Form.Item name="tags" label={t('provider.tags')}>
+            <Select
+              mode="tags"
+              size="large"
+              placeholder={t('provider.tags.placeholder')}
+              options={existingTags.map((tag) => ({ value: tag, label: tag }))}
+            />
+          </Form.Item>
         </Form>
       </Modal>
 

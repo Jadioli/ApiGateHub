@@ -3,6 +3,7 @@ package admin
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"apihub/internal/models"
 	"apihub/internal/services"
@@ -20,10 +21,11 @@ func NewProviderHandler(providerService *services.ProviderService, syncService *
 }
 
 type createProviderRequest struct {
-	Name     string `json:"name" binding:"required"`
-	Protocol string `json:"protocol" binding:"required,oneof=openai anthropic"`
-	BaseURL  string `json:"base_url" binding:"required,url"`
-	APIKey   string `json:"api_key" binding:"required"`
+	Name     string   `json:"name" binding:"required"`
+	Protocol string   `json:"protocol" binding:"required,oneof=openai anthropic"`
+	BaseURL  string   `json:"base_url" binding:"required,url"`
+	APIKey   string   `json:"api_key" binding:"required"`
+	Tags     []string `json:"tags"`
 }
 
 func (h *ProviderHandler) Create(c *gin.Context) {
@@ -41,6 +43,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 		Enabled:    true,
 		SyncStatus: "syncing",
 		SyncError:  "",
+		Tags:       strings.Join(req.Tags, ","),
 	}
 
 	if err := h.providerService.Create(provider); err != nil {
@@ -79,9 +82,10 @@ func (h *ProviderHandler) Get(c *gin.Context) {
 }
 
 type updateProviderRequest struct {
-	Name    string `json:"name"`
-	BaseURL string `json:"base_url"`
-	APIKey  string `json:"api_key"`
+	Name    string   `json:"name"`
+	BaseURL string   `json:"base_url"`
+	APIKey  string   `json:"api_key"`
+	Tags    []string `json:"tags"`
 }
 
 func (h *ProviderHandler) Update(c *gin.Context) {
@@ -111,6 +115,9 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 	}
 	if req.APIKey != "" {
 		provider.APIKey = req.APIKey
+	}
+	if req.Tags != nil {
+		provider.Tags = strings.Join(req.Tags, ",")
 	}
 
 	if err := h.providerService.Update(provider); err != nil {
@@ -199,4 +206,13 @@ func (h *ProviderHandler) ToggleModel(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pm)
+}
+
+func (h *ProviderHandler) ListTags(c *gin.Context) {
+	tags, err := h.providerService.GetAllTags()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, tags)
 }
