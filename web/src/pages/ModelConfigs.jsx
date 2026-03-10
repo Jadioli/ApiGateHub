@@ -79,8 +79,8 @@ export default function ModelConfigs() {
   const [createForm] = Form.useForm();
   const [cloneForm] = Form.useForm();
   const [editorForm] = Form.useForm();
-  const [quickMapOpen, setQuickMapOpen] = useState(false);
-  const [quickMapPrefix, setQuickMapPrefix] = useState('');
+  // 每个 provider 各自的一键映射前缀
+  const [quickMapPrefixes, setQuickMapPrefixes] = useState({});
 
   const loadConfigs = async () => {
     setLoading(true);
@@ -249,21 +249,18 @@ export default function ModelConfigs() {
     }));
   };
 
-  // 一键映射：将所有模型勾选并设置 mapped_name = prefix + model_name
-  const applyQuickMap = () => {
-    const prefix = quickMapPrefix;
+  // 按提供商一键映射：将该提供商的所有模型勾选并设置 mapped_name = prefix + model_name
+  const applyQuickMapForProvider = (providerId, models) => {
+    const prefix = quickMapPrefixes[providerId] || '';
     setSelected((previous) => {
       const next = { ...previous };
-      availableModels.forEach((group) => {
-        const providerId = group.provider.id;
-        (group.models || []).forEach((model) => {
-          next[model.id] = {
-            provider_id: providerId,
-            model_name: model.model_name,
-            mapped_name: prefix ? prefix + model.model_name : model.model_name,
-            priority: next[model.id]?.priority || 0,
-          };
-        });
+      (models || []).forEach((model) => {
+        next[model.id] = {
+          provider_id: providerId,
+          model_name: model.model_name,
+          mapped_name: prefix ? prefix + model.model_name : model.model_name,
+          priority: next[model.id]?.priority || 0,
+        };
       });
       return next;
     });
@@ -303,6 +300,21 @@ export default function ModelConfigs() {
           <Text type="secondary">{t('modelConfig.noModels')}</Text>
         ) : (
           <div>
+            {/* 该提供商的一键映射 */}
+            <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ background: '#fafafa', borderRadius: 6, padding: '8px 12px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <ThunderboltOutlined style={{ color: '#faad14' }} />
+              <Input
+                size="small"
+                value={quickMapPrefixes[provider.id] || ''}
+                onChange={(e) => setQuickMapPrefixes((prev) => ({ ...prev, [provider.id]: e.target.value }))}
+                placeholder={t('modelConfig.quickMap.prefixHint')}
+                addonBefore={t('modelConfig.quickMap.prefix')}
+                style={{ maxWidth: 340 }}
+              />
+              <Button size="small" type="primary" icon={<ThunderboltOutlined />} onClick={() => applyQuickMapForProvider(provider.id, models)}>
+                {t('modelConfig.quickMap.apply')}
+              </Button>
+            </div>
             <div style={{ marginBottom: 12 }}>
               <Checkbox checked={allChecked} indeterminate={someChecked} onChange={() => (allChecked ? deselectAll(models) : selectAll(provider.id, models))}>
                 <Text type="secondary">{t('modelConfig.selectAll')}</Text>
@@ -318,7 +330,6 @@ export default function ModelConfigs() {
                         <code style={{ fontSize: 13 }}>{model.model_name}</code>
                       </Checkbox>
                       <Space size={6} wrap>
-                        {!provider.enabled && <Tag>{t('modelConfig.providerDisabled')}</Tag>}
                         {!model.enabled && <Tag>{t('modelConfig.modelDisabled')}</Tag>}
                       </Space>
                     </div>
@@ -342,7 +353,7 @@ export default function ModelConfigs() {
         ),
       };
     }),
-    [availableModels, selected, t],
+    [availableModels, quickMapPrefixes, selected, t],
   );
 
   const columns = [
@@ -517,42 +528,7 @@ export default function ModelConfigs() {
               description={t('modelConfig.selectHint')}
             />
 
-            {/* 一键映射功能 */}
-            <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: quickMapOpen ? 12 : 0 }}>
-                <Button
-                  type={quickMapOpen ? 'primary' : 'default'}
-                  icon={<ThunderboltOutlined />}
-                  onClick={() => setQuickMapOpen(!quickMapOpen)}
-                  ghost={quickMapOpen}
-                >
-                  {t('modelConfig.quickMap')}
-                </Button>
-              </div>
-              {quickMapOpen && (
-                <div>
-                  <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                    <Input
-                      value={quickMapPrefix}
-                      onChange={(e) => setQuickMapPrefix(e.target.value)}
-                      placeholder={t('modelConfig.quickMap.prefixHint')}
-                      addonBefore={t('modelConfig.quickMap.prefix')}
-                      style={{ maxWidth: 500 }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Button type="primary" icon={<ThunderboltOutlined />} onClick={applyQuickMap}>
-                        {t('modelConfig.quickMap.apply')}
-                      </Button>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {t('modelConfig.quickMap.selectAll')}
-                      </Text>
-                    </div>
-                  </Space>
-                </div>
-              )}
-            </div>
 
-            <Divider style={{ margin: '8px 0' }} />
 
             {!availableModels.length ? (
               <Empty description={t('modelConfig.noModels')} />

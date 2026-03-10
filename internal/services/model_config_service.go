@@ -126,7 +126,7 @@ func (s *ModelConfigService) Clone(sourceID uint, newName string) (*models.Model
 
 // GetAllAvailableModels 鑾峰彇鎵€鏈?Provider 鐨勬墍鏈夋ā鍨嬶紝鐢ㄤ簬鍓嶇灞曠ず閰嶇疆鐣岄潰
 func (s *ModelConfigService) GetAllAvailableModels() ([]ProviderWithModels, error) {
-	providers, err := s.providerRepo.FindAll()
+	providers, err := s.providerRepo.FindAllEnabled()
 	if err != nil {
 		return nil, err
 	}
