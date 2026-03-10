@@ -18,8 +18,9 @@ type Provider struct {
 	Enabled    bool             `gorm:"default:true;index" json:"enabled"`
 	LastSyncAt *time.Time       `json:"last_sync_at"`
 	SyncStatus string           `gorm:"size:16;default:'pending'" json:"sync_status"`
-	SyncError  string           `gorm:"size:1024" json:"sync_error"`
-	CreatedAt  time.Time        `json:"created_at"`
+	SyncError    string           `gorm:"size:1024" json:"sync_error"`
+	SyncInterval string           `gorm:"size:16;default:'none'" json:"sync_interval"` // none / hourly / daily / weekly
+	CreatedAt    time.Time        `json:"created_at"`
 	UpdatedAt  time.Time        `json:"updated_at"`
 
 	Models []ProviderModel `gorm:"foreignKey:ProviderID" json:"models,omitempty"`

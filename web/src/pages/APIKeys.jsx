@@ -165,7 +165,7 @@ export default function APIKeys() {
         </Button>
       </div>
 
-      <Table dataSource={keys} columns={columns} rowKey="id" loading={loading} size="middle" />
+      <Table dataSource={keys} columns={columns} rowKey="id" loading={loading} size="middle" scroll={{ x: 'max-content' }} />
 
       <Modal
         title={t('apikey.add')}

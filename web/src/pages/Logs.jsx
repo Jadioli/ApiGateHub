@@ -14,7 +14,7 @@ export default function Logs() {
     setLoading(true);
     api.get('/logs', { params: { page: p, page_size: 20, ...f } })
       .then((r) => setData(r.data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   };
 
@@ -48,6 +48,7 @@ export default function Logs() {
         />
       </Space>
       <Table dataSource={data.logs} columns={columns} rowKey="id" loading={loading} size="middle"
+        scroll={{ x: 'max-content' }}
         pagination={{ current: page, total: data.total, pageSize: 20, onChange: onPageChange, showTotal: (total) => t('log.total', { total }) }}
       />
     </>

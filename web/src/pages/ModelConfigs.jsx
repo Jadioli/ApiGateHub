@@ -5,6 +5,7 @@ import {
   Button,
   Checkbox,
   Collapse,
+  Divider,
   Drawer,
   Empty,
   Form,
@@ -27,6 +28,7 @@ import {
   PlusOutlined,
   SaveOutlined,
   SettingOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useI18n } from '../i18n';
 import api from '../api';
@@ -63,6 +65,8 @@ export default function ModelConfigs() {
   const [createForm] = Form.useForm();
   const [cloneForm] = Form.useForm();
   const [editorForm] = Form.useForm();
+  const [quickMapOpen, setQuickMapOpen] = useState(false);
+  const [quickMapPrefix, setQuickMapPrefix] = useState('');
 
   const loadConfigs = async () => {
     setLoading(true);
@@ -227,6 +231,27 @@ export default function ModelConfigs() {
         priority: Number(priority) || 0,
       },
     }));
+  };
+
+  // 一键映射：将所有模型勾选并设置 mapped_name = prefix + model_name
+  const applyQuickMap = () => {
+    const prefix = quickMapPrefix;
+    setSelected((previous) => {
+      const next = { ...previous };
+      availableModels.forEach((group) => {
+        const providerId = group.provider.id;
+        (group.models || []).forEach((model) => {
+          next[model.id] = {
+            provider_id: providerId,
+            model_name: model.model_name,
+            mapped_name: prefix ? prefix + model.model_name : model.model_name,
+            priority: next[model.id]?.priority || 0,
+          };
+        });
+      });
+      return next;
+    });
+    message.success(t('common.success'));
   };
 
   const providerCount = availableModels.length || configs.length || 0;
@@ -461,6 +486,43 @@ export default function ModelConfigs() {
               message={t('modelConfig.selected', { total: Object.keys(selected).length })}
               description={t('modelConfig.selectHint')}
             />
+
+            {/* 一键映射功能 */}
+            <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: quickMapOpen ? 12 : 0 }}>
+                <Button
+                  type={quickMapOpen ? 'primary' : 'default'}
+                  icon={<ThunderboltOutlined />}
+                  onClick={() => setQuickMapOpen(!quickMapOpen)}
+                  ghost={quickMapOpen}
+                >
+                  {t('modelConfig.quickMap')}
+                </Button>
+              </div>
+              {quickMapOpen && (
+                <div>
+                  <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                    <Input
+                      value={quickMapPrefix}
+                      onChange={(e) => setQuickMapPrefix(e.target.value)}
+                      placeholder={t('modelConfig.quickMap.prefixHint')}
+                      addonBefore={t('modelConfig.quickMap.prefix')}
+                      style={{ maxWidth: 500 }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <Button type="primary" icon={<ThunderboltOutlined />} onClick={applyQuickMap}>
+                        {t('modelConfig.quickMap.apply')}
+                      </Button>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t('modelConfig.quickMap.selectAll')}
+                      </Text>
+                    </div>
+                  </Space>
+                </div>
+              )}
+            </div>
+
+            <Divider style={{ margin: '8px 0' }} />
 
             {!availableModels.length ? (
               <Empty description={t('modelConfig.noModels')} />

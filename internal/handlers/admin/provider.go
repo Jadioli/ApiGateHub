@@ -77,9 +77,10 @@ func (h *ProviderHandler) Get(c *gin.Context) {
 }
 
 type updateProviderRequest struct {
-	Name    string `json:"name"`
-	BaseURL string `json:"base_url"`
-	APIKey  string `json:"api_key"`
+	Name         string  `json:"name"`
+	BaseURL      string  `json:"base_url"`
+	APIKey       string  `json:"api_key"`
+	SyncInterval *string `json:"sync_interval"`
 }
 
 func (h *ProviderHandler) Update(c *gin.Context) {
@@ -111,10 +112,23 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 		provider.APIKey = req.APIKey
 	}
 
+	// 同步频率变更
+	syncIntervalChanged := false
+	if req.SyncInterval != nil {
+		provider.SyncInterval = *req.SyncInterval
+		syncIntervalChanged = true
+	}
+
 	if err := h.providerService.Update(provider); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 同步频率变更时刷新调度器
+	if syncIntervalChanged {
+		h.syncService.RefreshScheduler()
+	}
+
 	c.JSON(http.StatusOK, provider)
 }
 
@@ -189,4 +203,10 @@ func (h *ProviderHandler) ToggleModel(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pm)
+}
+
+// SyncAll 手动触发同步所有 Provider
+func (h *ProviderHandler) SyncAll(c *gin.Context) {
+	go h.syncService.SyncAllProviders()
+	c.JSON(http.StatusOK, gin.H{"message": "sync all started"})
 }

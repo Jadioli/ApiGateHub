@@ -54,8 +54,8 @@ func main() {
 	openaiHandler := proxyhandler.NewOpenAIHandler(openaiProxy)
 	anthropicHandler := proxyhandler.NewAnthropicHandler(anthropicProxy)
 
-	// Start sync scheduler
-	syncService.StartScheduler(cfg.SyncInterval)
+	// 启动 per-provider 定时同步调度器
+	syncService.StartPerProviderScheduler()
 	defer syncService.Stop()
 
 	// Router
@@ -76,6 +76,7 @@ func main() {
 			// Provider management
 			authed.GET("/providers", providerHandler.List)
 			authed.POST("/providers", providerHandler.Create)
+			authed.POST("/providers/sync-all", providerHandler.SyncAll)
 			authed.GET("/providers/:id", providerHandler.Get)
 			authed.PUT("/providers/:id", providerHandler.Update)
 			authed.DELETE("/providers/:id", providerHandler.Delete)
