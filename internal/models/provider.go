@@ -19,6 +19,7 @@ type Provider struct {
 	LastSyncAt   *time.Time       `json:"last_sync_at"`
 	SyncStatus   string           `gorm:"size:16;default:'pending'" json:"sync_status"`
 	SyncError    string           `gorm:"size:1024" json:"sync_error"`
+	Tags         string           `gorm:"size:512" json:"tags"`
 	SyncInterval string           `gorm:"size:16;default:'none'" json:"sync_interval"` // none / hourly / daily / weekly
 	CreatedAt    time.Time        `json:"created_at"`
 	UpdatedAt    time.Time        `json:"updated_at"`

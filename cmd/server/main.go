@@ -73,8 +73,8 @@ func main() {
 		{
 			authed.GET("/dashboard", logHandler.Dashboard)
 
-			// Provider management
 			authed.GET("/providers", providerHandler.List)
+			authed.GET("/providers/tags", providerHandler.ListTags)
 			authed.POST("/providers", providerHandler.Create)
 			authed.POST("/providers/sync-all", providerHandler.SyncAll)
 			authed.GET("/providers/:id", providerHandler.Get)

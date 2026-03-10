@@ -43,7 +43,9 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 		Enabled:    true,
 		SyncStatus: "syncing",
 		SyncError:  "",
-		Tags:       strings.Join(req.Tags, ","),
+	}
+	if req.Tags != nil {
+		provider.Tags = strings.Join(req.Tags, ",")
 	}
 
 	if err := h.providerService.Create(provider); err != nil {
@@ -82,10 +84,11 @@ func (h *ProviderHandler) Get(c *gin.Context) {
 }
 
 type updateProviderRequest struct {
-	Name         string  `json:"name"`
-	BaseURL      string  `json:"base_url"`
-	APIKey       string  `json:"api_key"`
-	SyncInterval *string `json:"sync_interval"`
+	Name         string   `json:"name"`
+	BaseURL      string   `json:"base_url"`
+	APIKey       string   `json:"api_key"`
+	SyncInterval *string  `json:"sync_interval"`
+	Tags         []string `json:"tags"`
 }
 
 func (h *ProviderHandler) Update(c *gin.Context) {
@@ -183,12 +186,18 @@ func (h *ProviderHandler) Sync(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "sync completed"})
 }
 
-func (h *ProviderHandler) SyncAll(c *gin.Context) {
-	if err := h.syncService.SyncAllProviders(); err != nil {
+func (h *ProviderHandler) ListTags(c *gin.Context) {
+	tags, err := h.providerService.GetAllTags()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "sync completed"})
+	c.JSON(http.StatusOK, tags)
+}
+
+func (h *ProviderHandler) SyncAll(c *gin.Context) {
+	go h.syncService.SyncAllProviders()
+	c.JSON(http.StatusOK, gin.H{"message": "sync all started"})
 }
 
 func (h *ProviderHandler) ListModels(c *gin.Context) {
@@ -219,10 +228,4 @@ func (h *ProviderHandler) ToggleModel(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pm)
-}
-
-// SyncAll 手动触发同步所有 Provider
-func (h *ProviderHandler) SyncAll(c *gin.Context) {
-	go h.syncService.SyncAllProviders()
-	c.JSON(http.StatusOK, gin.H{"message": "sync all started"})
 }

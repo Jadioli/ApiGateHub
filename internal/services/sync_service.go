@@ -94,7 +94,7 @@ func (s *SyncService) SyncAllProviders() error {
 	providers, err := s.providerRepo.FindAllEnabled()
 	if err != nil {
 		log.Printf("[Sync] 获取 Provider 列表失败: %v", err)
-		return
+		return fmt.Errorf("failed to fetch providers: %w", err)
 	}
 
 	var failed []string

@@ -203,6 +203,7 @@ export default function APIKeys() {
             </Form.Item>
           </Form>
         </Modal>
+      </Card>
     </div>
   );
 }

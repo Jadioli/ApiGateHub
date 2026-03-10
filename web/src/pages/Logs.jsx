@@ -56,14 +56,11 @@ export default function Logs() {
         </Space>
 
         <Table dataSource={data.logs} columns={columns} rowKey="id" loading={loading} size="middle"
+          scroll={{ x: 'max-content' }}
           pagination={{ current: page, total: data.total, pageSize: 20, onChange: onPageChange, showTotal: (total) => t('log.total', { total }) }}
         />
-      </Space>
-      <Table dataSource={data.logs} columns={columns} rowKey="id" loading={loading} size="middle"
-        scroll={{ x: 'max-content' }}
-        pagination={{ current: page, total: data.total, pageSize: 20, onChange: onPageChange, showTotal: (total) => t('log.total', { total }) }}
-      />
-    </>
+      </Card>
+    </div>
   );
 }
 
