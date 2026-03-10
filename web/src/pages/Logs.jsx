@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { Table, Input, Select, Space, Tag } from 'antd';
+import { Table, Input, Select, Space, Tag, Typography, Card } from 'antd';
 import { useI18n } from '../i18n';
 import api from '../api';
 
@@ -40,11 +40,23 @@ export default function Logs() {
   ];
 
   return (
-    <>
-      <Space style={{ marginBottom: 16 }}>
-        <Input placeholder={t('log.filter.model')} allowClear onChange={(e) => onFilter('model', e.target.value)} style={{ width: 200 }} />
-        <Select placeholder={t('log.filter.status')} allowClear onChange={(v) => onFilter('status', v)} style={{ width: 140 }}
-          options={[{ value: '200', label: '200' }, { value: '400', label: '400' }, { value: '401', label: '401' }, { value: '403', label: '403' }, { value: '500', label: '500' }, { value: '502', label: '502' }]}
+    <div className="dashboard-container">
+      <div className="dashboard-header mb-6">
+        <Typography.Title level={2} style={{ marginTop: 0, marginBottom: '24px', fontWeight: 700, color: '#1e293b' }}>
+          {t('menu.logs')}
+        </Typography.Title>
+      </div>
+
+      <Card className="premium-card">
+        <Space style={{ marginBottom: 16 }}>
+          <Input size="large" placeholder={t('log.filter.model')} allowClear onChange={(e) => onFilter('model', e.target.value)} style={{ width: 240, borderRadius: 8 }} />
+          <Select size="large" placeholder={t('log.filter.status')} allowClear onChange={(v) => onFilter('status', v)} style={{ width: 140 }}
+            options={[{ value: '200', label: '200' }, { value: '400', label: '400' }, { value: '401', label: '401' }, { value: '403', label: '403' }, { value: '500', label: '500' }, { value: '502', label: '502' }]}
+          />
+        </Space>
+
+        <Table dataSource={data.logs} columns={columns} rowKey="id" loading={loading} size="middle"
+          pagination={{ current: page, total: data.total, pageSize: 20, onChange: onPageChange, showTotal: (total) => t('log.total', { total }) }}
         />
       </Space>
       <Table dataSource={data.logs} columns={columns} rowKey="id" loading={loading} size="middle"

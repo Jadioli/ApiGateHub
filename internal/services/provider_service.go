@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	"apihub/internal/models"
 	"apihub/internal/repository"
 )
@@ -67,4 +69,30 @@ func (s *ProviderService) ToggleModel(modelID uint) (*models.ProviderModel, erro
 
 func (s *ProviderService) UpsertModels(providerID uint, modelNames []string) error {
 	return s.repo.UpsertModels(providerID, modelNames)
+}
+
+func (s *ProviderService) GetAllTags() ([]string, error) {
+	providers, err := s.repo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[string]bool)
+	var tags []string
+	for _, p := range providers {
+		if p.Tags == "" {
+			continue
+		}
+		for _, tag := range strings.Split(p.Tags, ",") {
+			tag = strings.TrimSpace(tag)
+			if tag != "" && !seen[tag] {
+				seen[tag] = true
+				tags = append(tags, tag)
+			}
+		}
+	}
+	if tags == nil {
+		tags = []string{}
+	}
+	return tags, nil
 }

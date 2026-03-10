@@ -3,6 +3,7 @@ package admin
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"apihub/internal/models"
 	"apihub/internal/services"
@@ -20,10 +21,11 @@ func NewProviderHandler(providerService *services.ProviderService, syncService *
 }
 
 type createProviderRequest struct {
-	Name     string `json:"name" binding:"required"`
-	Protocol string `json:"protocol" binding:"required,oneof=openai anthropic"`
-	BaseURL  string `json:"base_url" binding:"required,url"`
-	APIKey   string `json:"api_key" binding:"required"`
+	Name     string   `json:"name" binding:"required"`
+	Protocol string   `json:"protocol" binding:"required,oneof=openai anthropic"`
+	BaseURL  string   `json:"base_url" binding:"required,url"`
+	APIKey   string   `json:"api_key" binding:"required"`
+	Tags     []string `json:"tags"`
 }
 
 func (h *ProviderHandler) Create(c *gin.Context) {
@@ -34,11 +36,14 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 	}
 
 	provider := &models.Provider{
-		Name:     req.Name,
-		Protocol: models.ProviderProtocol(req.Protocol),
-		BaseURL:  req.BaseURL,
-		APIKey:   req.APIKey,
-		Enabled:  true,
+		Name:       req.Name,
+		Protocol:   models.ProviderProtocol(req.Protocol),
+		BaseURL:    req.BaseURL,
+		APIKey:     req.APIKey,
+		Enabled:    true,
+		SyncStatus: "syncing",
+		SyncError:  "",
+		Tags:       strings.Join(req.Tags, ","),
 	}
 
 	if err := h.providerService.Create(provider); err != nil {
@@ -111,6 +116,9 @@ func (h *ProviderHandler) Update(c *gin.Context) {
 	if req.APIKey != "" {
 		provider.APIKey = req.APIKey
 	}
+	if req.Tags != nil {
+		provider.Tags = strings.Join(req.Tags, ",")
+	}
 
 	// 同步频率变更
 	syncIntervalChanged := false
@@ -169,6 +177,14 @@ func (h *ProviderHandler) Sync(c *gin.Context) {
 	}
 
 	if err := h.syncService.SyncProvider(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "sync completed"})
+}
+
+func (h *ProviderHandler) SyncAll(c *gin.Context) {
+	if err := h.syncService.SyncAllProviders(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

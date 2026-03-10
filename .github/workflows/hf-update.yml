@@ -1,0 +1,24 @@
+name: Restart Hugging Face Space
+
+on:
+  push:
+    branches:
+      - master  # 如果你的默认分支是 main，请记得改成 main
+
+jobs:
+  restart-space:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger HF Space restart
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          set -euxo pipefail
+
+          # 触发 Space 重启（Docker Space 通常会重新拉取并启动最新镜像/构建）
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${HF_TOKEN}" \
+            "https://huggingface.co/api/spaces/${HF_SPACE}/restart"
+
+          echo "Successfully triggered restart for ${HF_SPACE}"

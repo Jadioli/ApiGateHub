@@ -1,0 +1,125 @@
+.premium-sider {
+    background: white !important;
+    border-radius: var(--card-radius);
+    box-shadow: var(--soft-shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sider-header {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.sider-logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--primary-color), #818cf8);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.sider-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+}
+
+.premium-menu {
+    border-right: none !important;
+    padding: 12px 0;
+    flex: 1;
+}
+
+.premium-menu .ant-menu-item {
+    margin: 4px 12px !important;
+    width: calc(100% - 24px) !important;
+    border-radius: 8px !important;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.premium-menu .ant-menu-item-selected {
+    background-color: #eef2ff !important;
+    color: var(--primary-color) !important;
+    font-weight: 600;
+}
+
+.sider-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.logout-btn {
+    color: #64748b !important;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.logout-btn:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+.main-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.premium-header {
+    height: 64px !important;
+    line-height: 64px !important;
+    padding: 0 24px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: var(--card-radius);
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.lang-btn {
+    font-weight: 500;
+    color: #475569 !important;
+}
+
+.lang-btn:hover {
+    color: var(--primary-color) !important;
+    background: #f1f5f9 !important;
+}
+
+.premium-content {
+    background: transparent !important;
+    border-radius: var(--card-radius);
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Responsiveness adjustments for the detached sidebar */
+@media (max-width: 992px) {
+    .ant-layout {
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    .premium-sider {
+        border-radius: 0;
+    }
+
+    .premium-header {
+        border-radius: 0;
+        margin-bottom: 16px;
+    }
+}

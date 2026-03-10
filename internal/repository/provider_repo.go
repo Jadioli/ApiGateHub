@@ -2,6 +2,7 @@ package repository
 
 import (
 	"apihub/internal/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -52,6 +53,17 @@ func (r *ProviderRepo) FindAllEnabled() ([]models.Provider, error) {
 
 func (r *ProviderRepo) Update(provider *models.Provider) error {
 	return r.db.Save(provider).Error
+}
+
+func (r *ProviderRepo) UpdateSyncState(providerID uint, status string, syncError string, lastSyncAt *time.Time) error {
+	updates := map[string]interface{}{
+		"sync_status": status,
+		"sync_error":  syncError,
+	}
+	if lastSyncAt != nil {
+		updates["last_sync_at"] = *lastSyncAt
+	}
+	return r.db.Model(&models.Provider{}).Where("id = ?", providerID).Updates(updates).Error
 }
 
 func (r *ProviderRepo) Delete(id uint) error {

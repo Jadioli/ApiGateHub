@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"apihub/internal/models"
@@ -89,15 +90,24 @@ func (s *SyncService) Stop() {
 	}
 }
 
-func (s *SyncService) SyncAllProviders() {
+func (s *SyncService) SyncAllProviders() error {
 	providers, err := s.providerRepo.FindAllEnabled()
 	if err != nil {
 		log.Printf("[Sync] 获取 Provider 列表失败: %v", err)
 		return
 	}
+
+	var failed []string
 	for _, p := range providers {
-		s.SyncProvider(p.ID)
+		if err := s.SyncProvider(p.ID); err != nil {
+			failed = append(failed, fmt.Sprintf("%s(%d): %v", p.Name, p.ID, err))
+		}
 	}
+
+	if len(failed) > 0 {
+		return fmt.Errorf("sync failed for %d provider(s): %s", len(failed), strings.Join(failed, "; "))
+	}
+	return nil
 }
 
 func (s *SyncService) SyncProvider(providerID uint) error {
@@ -129,20 +139,32 @@ func (s *SyncService) SyncProvider(providerID uint) error {
 	}
 
 	if err := s.providerService.UpsertModels(providerID, modelNames); err != nil {
-		provider.SyncStatus = "failed"
-		provider.SyncError = err.Error()
-		s.providerRepo.Update(provider)
+		if updateErr := s.updateSyncState(providerID, "failed", err.Error(), nil); updateErr != nil {
+			log.Printf("[Sync] Failed to update failed status for provider %s: %v", provider.Name, updateErr)
+		}
 		return err
 	}
 
 	now := time.Now()
-	provider.LastSyncAt = &now
-	provider.SyncStatus = "success"
-	provider.SyncError = ""
-	s.providerRepo.Update(provider)
+	if err := s.updateSyncState(providerID, "success", "", &now); err != nil {
+		log.Printf("[Sync] Models synced for provider %s but failed to persist success status: %v", provider.Name, err)
+		return fmt.Errorf("models synced but failed to persist sync status: %w", err)
+	}
 
 	log.Printf("[Sync] Provider %s 同步成功，共 %d 个模型", provider.Name, len(modelNames))
 	return nil
+}
+
+func (s *SyncService) updateSyncState(providerID uint, status string, syncError string, lastSyncAt *time.Time) error {
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		lastErr = s.providerRepo.UpdateSyncState(providerID, status, syncError, lastSyncAt)
+		if lastErr == nil {
+			return nil
+		}
+		time.Sleep(time.Duration(attempt+1) * 120 * time.Millisecond)
+	}
+	return lastErr
 }
 
 func (s *SyncService) fetchModels(provider *models.Provider) ([]string, error) {

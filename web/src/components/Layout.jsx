@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useI18n } from '../i18n';
+import './Layout.css'; // Will create this
 
 const { Sider, Content, Header } = AntLayout;
 
@@ -40,36 +41,51 @@ export default function Layout() {
   };
 
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
-      <Sider breakpoint="lg" collapsedWidth={64}>
-        <div style={{ color: '#fff', textAlign: 'center', padding: '16px 0', fontSize: 20, fontWeight: 700 }}>
-          {t('app.title')}
+    <AntLayout style={{ minHeight: '100vh', flexDirection: 'row', padding: '16px', gap: '16px' }}>
+      <Sider
+        breakpoint="lg"
+        collapsedWidth={64}
+        className="premium-sider"
+        width={240}
+      >
+        <div className="sider-header">
+          <div className="sider-logo" />
+          <span className="sider-title">{t('app.title')}</span>
         </div>
         <Menu
-          theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
+          className="premium-menu"
         />
-        <div style={{ position: 'absolute', bottom: 16, width: '100%', textAlign: 'center' }}>
-          <LogoutOutlined
-            style={{ color: '#fff', fontSize: 18, cursor: 'pointer' }}
+        <div className="sider-footer">
+          <Button
+            type="text"
+            icon={<LogoutOutlined />}
             onClick={() => { localStorage.removeItem('token'); navigate('/login'); }}
-            title="Logout"
-          />
+            className="logout-btn"
+            block
+          >
+            Logout
+          </Button>
         </div>
       </Sider>
-      <AntLayout>
-        <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 16, fontWeight: 600 }}>
+
+      <AntLayout className="main-layout fade-in">
+        <Header className="premium-header glass-panel">
+          <span className="header-title">
             {menuItems.find((item) => selectedKeys.includes(item.key))?.label || t('app.title')}
           </span>
-          <Dropdown menu={langMenu}>
-            <Button type="text" icon={<GlobalOutlined />}>{lang === 'zh' ? '中文' : 'EN'}</Button>
-          </Dropdown>
+          <div className="header-actions">
+            <Dropdown menu={langMenu} placement="bottomRight">
+              <Button type="text" className="lang-btn" icon={<GlobalOutlined />}>
+                {lang === 'zh' ? '中文' : 'EN'}
+              </Button>
+            </Dropdown>
+          </div>
         </Header>
-        <Content style={{ margin: 24 }}>
+        <Content className="premium-content slide-up">
           <Outlet />
         </Content>
       </AntLayout>
