@@ -249,24 +249,31 @@ export default function ModelConfigs() {
     }));
   };
 
-  // 按提供商一键映射：将该提供商的所有模型勾选并设置 mapped_name = prefix + model_name
+  // Quick map only updates models already selected under this provider.
   const applyQuickMapForProvider = (providerId, models) => {
     const prefix = quickMapPrefixes[providerId] || '';
+    const selectedModels = (models || []).filter((model) => selected[model.id]);
+
+    if (!selectedModels.length) {
+      message.warning(t('modelConfig.quickMap.selectFirst'));
+      return;
+    }
+
     setSelected((previous) => {
       const next = { ...previous };
-      (models || []).forEach((model) => {
+      selectedModels.forEach((model) => {
         next[model.id] = {
+          ...next[model.id],
           provider_id: providerId,
           model_name: model.model_name,
           mapped_name: prefix ? prefix + model.model_name : model.model_name,
-          priority: next[model.id]?.priority || 0,
         };
       });
       return next;
     });
-    message.success(t('common.success'));
-  };
 
+    message.success(t('modelConfig.quickMap.selectedOnly'));
+  };
   const providerCount = availableModels.length || configs.length || 0;
   const totalModels = useMemo(
     () => availableModels.reduce((total, group) => total + (group.models?.length || 0), 0),
