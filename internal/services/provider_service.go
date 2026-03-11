@@ -71,6 +71,10 @@ func (s *ProviderService) UpsertModels(providerID uint, modelNames []string) err
 	return s.repo.UpsertModels(providerID, modelNames)
 }
 
+func (s *ProviderService) SetModelsEnabled(providerID uint, enabled bool) error {
+	return s.repo.SetModelsEnabled(providerID, enabled)
+}
+
 func (s *ProviderService) GetAllTags() ([]string, error) {
 	providers, err := s.repo.FindAll()
 	if err != nil {

@@ -83,6 +83,7 @@ func main() {
 			authed.PUT("/providers/:id/toggle", providerHandler.Toggle)
 			authed.POST("/providers/:id/sync", providerHandler.Sync)
 			authed.GET("/providers/:id/models", providerHandler.ListModels)
+			authed.PUT("/providers/:id/models/bulk", providerHandler.BulkToggleModels)
 			authed.PUT("/providers/:id/models/:mid/toggle", providerHandler.ToggleModel)
 
 			// ModelConfig management

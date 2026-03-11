@@ -55,6 +55,7 @@ func (h *ProviderHandler) Create(c *gin.Context) {
 
 	// Trigger async model sync
 	go h.syncService.SyncProvider(provider.ID)
+	h.syncService.RefreshScheduler()
 
 	c.JSON(http.StatusCreated, provider)
 }
@@ -154,6 +155,7 @@ func (h *ProviderHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.syncService.RefreshScheduler()
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 
@@ -169,6 +171,7 @@ func (h *ProviderHandler) Toggle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.syncService.RefreshScheduler()
 	c.JSON(http.StatusOK, provider)
 }
 
@@ -228,4 +231,35 @@ func (h *ProviderHandler) ToggleModel(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pm)
+}
+
+type bulkToggleModelsRequest struct {
+	Enabled *bool `json:"enabled" binding:"required"`
+}
+
+func (h *ProviderHandler) BulkToggleModels(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req bulkToggleModelsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.providerService.SetModelsEnabled(uint(id), *req.Enabled); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	models, err := h.providerService.GetModels(uint(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, models)
 }

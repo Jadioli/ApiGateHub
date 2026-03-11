@@ -120,3 +120,9 @@ func (r *ProviderRepo) UpsertModels(providerID uint, modelNames []string) error 
 func (r *ProviderRepo) UpdateModel(pm *models.ProviderModel) error {
 	return r.db.Save(pm).Error
 }
+
+func (r *ProviderRepo) SetModelsEnabled(providerID uint, enabled bool) error {
+	return r.db.Model(&models.ProviderModel{}).
+		Where("provider_id = ?", providerID).
+		Update("enabled", enabled).Error
+}

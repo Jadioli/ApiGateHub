@@ -160,6 +160,18 @@ export default function Providers() {
     setModels(data);
   };
 
+  const handleBulkToggle = async (enabled) => {
+    if (!drawerProvider?.id) return;
+
+    try {
+      const { data } = await api.put(`/providers/${drawerProvider.id}/models/bulk`, { enabled });
+      setModels(data);
+      message.success(t('common.success'));
+    } catch (error) {
+      message.error(error.response?.data?.error || t('common.failed'));
+    }
+  };
+
   const columns = [
     { title: t('provider.name'), dataIndex: 'name', key: 'name' },
     { title: t('provider.protocol'), dataIndex: 'protocol', key: 'protocol', render: (v) => <Tag color={v === 'openai' ? 'blue' : 'orange'}>{v}</Tag> },
@@ -236,8 +248,8 @@ export default function Providers() {
       <Drawer title={`${t('provider.models')} - ${drawerProvider?.name || ''}`} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={480}>
         <div style={{ marginBottom: 16 }}>
           <Space>
-            <Button type="primary" onClick={() => handleBulkToggle(true)}>全启用</Button>
-            <Button onClick={() => handleBulkToggle(false)}>全不启用</Button>
+            <Button type="primary" onClick={() => handleBulkToggle(true)}>{t('provider.model.enableAll')}</Button>
+            <Button onClick={() => handleBulkToggle(false)}>{t('provider.model.disableAll')}</Button>
           </Space>
         </div>
         <Table dataSource={models} rowKey="id" size="middle" pagination={false}

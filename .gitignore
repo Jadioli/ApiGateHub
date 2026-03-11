@@ -24,3 +24,9 @@ web/dist/
 .idea/
 .vscode/
 *.swp
+
+# AI CLI 工具本地历史记录缓存
+.codex/
+.codex_history*
+.claude/
+.claude_history*
