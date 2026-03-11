@@ -1,24 +1,39 @@
-name: Restart Hugging Face Space
+name: Sync to Hugging Face Space
 
 on:
   push:
     branches:
-      - master  # 如果你的默认分支是 main，请记得改成 main
+      - master
+  workflow_dispatch:
 
 jobs:
-  restart-space:
+  sync-space:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - name: Trigger HF Space restart
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Push source to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE: ${{ secrets.HF_SPACE }}
         run: |
           set -euxo pipefail
 
-          # 触发 Space 重启（Docker Space 通常会重新拉取并启动最新镜像/构建）
-          curl -sS -X POST \
-            -H "Authorization: Bearer ${HF_TOKEN}" \
-            "https://huggingface.co/api/spaces/${HF_SPACE}/restart"
+          test -n "${HF_TOKEN}"
+          test -n "${HF_SPACE}"
 
-          echo "Successfully triggered restart for ${HF_SPACE}"
+          git remote remove hf-space || true
+          git remote add hf-space "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}"
+
+          git push hf-space HEAD:main --force
